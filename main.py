@@ -1,5 +1,7 @@
+import re
 
 import nltk
+import pd as pd
 from nltk import word_tokenize
 from nltk import sent_tokenize
 import pandas as pd
@@ -73,42 +75,23 @@ def createPOSTags(dict):
     return posDict
 
 # use above functions to perform desired analysis
+
 # groups descriptions by location
 df['DESCRIPTION'] = df['DESCRIPTION'].str.lower()
 dbl = df.groupby(['LOCATION'])['DESCRIPTION'].apply(list)
-# create frequency distribution
+
+# create frequency distribution of words used by location
 dblProcessed = createDictionary(dbl)
 freqDict = createFreqDist(dblProcessed)
+
+# create parts of speech tags for words by location
 posDict = createPOSTags(dblProcessed)
-# converting dictionary to dataframe to enable exportation
-freqDictDf_v2 = pd.DataFrame(data=freqDict, columns=['Location', 'FrequencyPerWord'])
-print(freqDictDf_v2.shape)
-print(freqDictDf_v2.columns)
 
-sample = ['hi', 'my name is', 'pycharm is mid', 'just kidding!']
-tokenizedSample = tokenize(sample)
-tagged = nltk.pos_tag(tokenizedSample[0])
-filteredTokenizedSample = filterStopWords(tokenizedSample)
+# converting frequency dictionary to dataframe to enable exportation
+df4 = pd.DataFrame()
+df4 = df4.assign(location=dblProcessed.keys())
+df4 = df4.assign(word=dblProcessed.values())
+df4 = df4.explode('word')
+df4 = df4.groupby(['location'])['word'].value_counts().to_frame().rename(columns={'word': 'frequency'}).reset_index()
 
-freqDictDf = pd.DataFrame.from_dict(freqDict)
-cols = freqDictDf.columns
-freqDictDf = freqDictDf.assign(location='')
-freqDictDf = freqDictDf.assign(freq='')
-freqDictDf = freqDictDf.assign(word='')
-
-
-freqDictDf = freqDictDf.pivot(columns='location', values=cols)
-# table = pd.pivot_table(freqDictDf, values=)
-
-df3 = pd.DataFrame()
-df3 = df3.assign(location=freqDict.keys())
-df3 = df3.assign(freqPerWord=freqDict.values())
-
-
-
-freqDictDf = pd.DataFrame.from_dict(freqDict)
-print(freqDictDf.shape)
-print(freqDictDf.columns)
-
-
-freqDictDf.to_csv(r'Y:\PUBLIC\Analytics COE\USAM\Maximo_tables\freqDictDf.csv')
+# export to csv
