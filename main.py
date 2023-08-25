@@ -66,7 +66,7 @@ def createFreqDist(dict):
         freqDict[key] = fd
     return freqDict
 
-# creates
+# creates a dictionary with tagged tokens for their parts of speech
 def createPOSTags(dict):
     posDict = {}
     for key in dict:
